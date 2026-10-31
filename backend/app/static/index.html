@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CAV IDS Debug</title>
+<style>
+  :root { --bg:#fff; --fg:#1c1f24; --muted:#6b7280; --card:#f3f4f6; --ok:#15803d; --bad:#b91c1c; --line:#2563eb; }
+  @media (prefers-color-scheme: dark) { :root { --bg:#0f1115; --fg:#e5e7eb; --muted:#9ca3af; --card:#1a1d24; --ok:#4ade80; --bad:#f87171; --line:#60a5fa; } }
+  body { margin:0; padding:16px; background:var(--bg); color:var(--fg); font:14px/1.4 system-ui,sans-serif; }
+  h1 { font-size:18px; margin:0 0 12px; }
+  #banner { padding:12px 16px; border-radius:8px; font-weight:600; background:var(--card); color:var(--ok); margin-bottom:12px; }
+  #banner.alert { background:var(--bad); color:#fff; }
+  .grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(220px,1fr)); gap:12px; }
+  .card { background:var(--card); border-radius:8px; padding:12px; }
+  .card h2 { font-size:12px; text-transform:uppercase; letter-spacing:.05em; color:var(--muted); margin:0 0 8px; }
+  .kv { display:flex; justify-content:space-between; font-variant-numeric:tabular-nums; }
+  canvas { width:100%; height:120px; display:block; }
+  .wide { grid-column:1/-1; }
+</style>
+</head>
+<body>
+<h1>CAV intrusion detection <span id="conn" style="color:var(--muted);font-weight:400">connecting…</span></h1>
+<div id="banner">Fail-safe: nominal</div>
+<div class="grid">
+  <div class="card wide"><h2>Attack probability (latest per frame)</h2><canvas id="spark" width="900" height="120"></canvas></div>
+  <div class="card"><h2>Inference latency (ms)</h2><div id="lat"></div></div>
+  <div class="card"><h2>Throughput</h2><div id="thr"></div></div>
+  <div class="card"><h2>V2X</h2><div id="v2x"></div></div>
+  <div class="card"><h2>Confusion (vs ground truth)</h2><div id="conf"></div></div>
+</div>
+<script>
+const $ = id => document.getElementById(id);
+const kv = (k, v) => `<div class="kv"><span>${k}</span><span>${v}</span></div>`;
+const hist = [];
+function draw() {
+  const c = $("spark"), g = c.getContext("2d"), w = c.width, h = c.height;
+  const css = getComputedStyle(document.documentElement);
+  g.clearRect(0, 0, w, h);
+  g.strokeStyle = css.getPropertyValue("--muted"); g.setLineDash([4, 4]);
+  g.beginPath(); g.moveTo(0, h / 2); g.lineTo(w, h / 2); g.stroke(); g.setLineDash([]);
+  g.strokeStyle = css.getPropertyValue("--line"); g.lineWidth = 2; g.beginPath();
+  hist.forEach((p, i) => { const x = i / 299 * w, y = h - p * h; i ? g.lineTo(x, y) : g.moveTo(x, y); });
+  g.stroke();
+}
+function connect() {
+  const ws = new WebSocket(`${location.protocol === "https:" ? "wss" : "ws"}://${location.host}/ws/dashboard`);
+  ws.onopen = () => $("conn").textContent = "live";
+  ws.onclose = () => { $("conn").textContent = "reconnecting…"; setTimeout(connect, 1000); };
+  ws.onmessage = ev => {
+    const f = JSON.parse(ev.data), l = f.latest;
+    hist.push(f.interval.max_attack_probability || l.prediction.attack_probability);
+    if (hist.length > 300) hist.shift();
+    draw();
+    const b = $("banner");
+    b.classList.toggle("alert", f.failsafe.triggered);
+    b.textContent = f.failsafe.triggered
+      ? `FAIL-SAFE: ${f.failsafe.reason} (seq ${f.failsafe.triggered_at_seq})` : "Fail-safe: nominal";
+    const v = l.v2x;
+    $("v2x").innerHTML = v ? kv("Limit", v.speed_limit_kph + " km/h") + kv("Speed", v.vehicle_speed_kph + " km/h")
+      + kv("Violation", v.speed_violation) + kv("Hazard", v.hazard ?? "none") : "no V2X data";
+    if (f.stats) {
+      const s = f.stats, i = s.inference_ms, c = s.confusion;
+      $("lat").innerHTML = kv("p50", i.p50) + kv("p95", i.p95) + kv("p99", i.p99) + kv("max", i.max)
+        + kv("latest", l.latency.inference_ms);
+      $("thr").innerHTML = kv("windows/s", s.throughput_wps) + kv("processed", s.windows_processed) + kv("clients", s.dashboard_clients);
+      $("conf").innerHTML = kv("TP", c.tp) + kv("FP", c.fp) + kv("TN", c.tn) + kv("FN", c.fn);
+    }
+  };
+}
+connect();
+</script>
+</body>
+</html>
