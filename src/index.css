@@ -1,0 +1,57 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Road dashes: pattern tile is 120px wide, so shifting by exactly one tile loops seamlessly. */
+@keyframes road-scroll {
+  from { background-position-x: 0; }
+  to   { background-position-x: -120px; }
+}
+
+@keyframes car-shake {
+  0%   { transform: translate(0, 0) rotate(0deg); }
+  10%  { transform: translate(-6px, 3px) rotate(-1.5deg); }
+  20%  { transform: translate(5px, -4px) rotate(1.2deg); }
+  30%  { transform: translate(-7px, -2px) rotate(-0.8deg); }
+  40%  { transform: translate(6px, 4px) rotate(1.6deg); }
+  50%  { transform: translate(-4px, -5px) rotate(-1.2deg); }
+  60%  { transform: translate(7px, 2px) rotate(0.9deg); }
+  70%  { transform: translate(-5px, 5px) rotate(-1.6deg); }
+  80%  { transform: translate(4px, -3px) rotate(1.1deg); }
+  90%  { transform: translate(-6px, 1px) rotate(-0.7deg); }
+  100% { transform: translate(0, 0) rotate(0deg); }
+}
+
+@keyframes hazard-flash {
+  0%, 49%   { opacity: 1; }
+  50%, 100% { opacity: 0.1; }
+}
+
+@keyframes shield-pulse {
+  0%, 100% { opacity: 0.55; transform: scale(1); }
+  50%      { opacity: 1;    transform: scale(1.04); }
+}
+
+@keyframes warn-flash {
+  0%, 49%   { opacity: 1; }
+  50%, 100% { opacity: 0.25; }
+}
+
+@keyframes wheel-spin {
+  to { transform: rotate(-360deg); }
+}
+
+.road-dashes {
+  background-image: linear-gradient(to right, #fbbf24 0 60px, transparent 60px 120px);
+  background-size: 120px 6px;
+  background-repeat: repeat-x;
+  animation-name: road-scroll;
+  animation-timing-function: linear;
+  animation-iteration-count: infinite;
+}
+
+.car-shake    { animation: car-shake 0.12s linear infinite; }
+.hazard-flash { animation: hazard-flash 0.5s steps(1) infinite; }
+.shield-pulse { animation: shield-pulse 1.2s ease-in-out infinite; transform-origin: center; transform-box: fill-box; }
+.warn-flash   { animation: warn-flash 0.4s steps(1) infinite; }
+.wheel-spin   { animation-name: wheel-spin; animation-timing-function: linear; animation-iteration-count: infinite; transform-origin: center; transform-box: fill-box; }
