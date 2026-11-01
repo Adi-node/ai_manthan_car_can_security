@@ -60,7 +60,7 @@ export default function Vehicle2DVisualizer({ latest, isIdsEnabled }) {
         )}
         {isBlocked && (
           <div className="rounded-lg border-2 border-emerald-300 bg-emerald-600/90 px-5 py-2 text-lg font-black tracking-widest text-white">
-            ATTACK BLOCKED
+            SIMULATED MITIGATION
           </div>
         )}
       </div>
@@ -71,7 +71,7 @@ export default function Vehicle2DVisualizer({ latest, isIdsEnabled }) {
           {Math.round(speed)}
           <span className="ml-1 text-sm text-slate-400">km/h</span>
         </div>
-        {isBlocked && <div className="text-[10px] text-emerald-300">spoofed {Math.round(reportedSpeed)} rejected</div>}
+        {isBlocked && <div className="text-[10px] text-emerald-300">simulated stop · reported {Math.round(reportedSpeed)} km/h</div>}
       </div>
 
       {/* Scene */}

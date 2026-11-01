@@ -41,13 +41,12 @@ export default function App() {
   const latencyRef = useRef(latencyMs);
   latencyRef.current = latencyMs;
 
-  // Log once per attack burst when the IDS is on (also fires if the IDS is
-  // switched on mid-attack). Depends only on the booleans, not every tick.
+  // Log once per attack burst when simulated mitigation is on.
   useEffect(() => {
     if (isIdsEnabled && isAttack) {
       pushLog(
         'prevented',
-        `INTRUSION PREVENTED. Spoofing signature isolated in ${latencyRef.current.toFixed(1)}ms.`
+        `SIMULATED MITIGATION. Backend flagged an attack in ${latencyRef.current.toFixed(1)}ms.`
       );
     }
   }, [isIdsEnabled, isAttack, pushLog]);
@@ -57,9 +56,9 @@ export default function App() {
   useEffect(() => {
     if (prevIds.current === isIdsEnabled) return; // StrictMode re-run / no change
     if (prevIds.current === null) {
-      pushLog('info', 'Dashboard online. IDS is OFF.');
+      pushLog('info', 'Dashboard connected. Mitigation simulation is OFF; backend detection remains active.');
     } else {
-      pushLog('info', `IDS ${isIdsEnabled ? 'ENABLED - monitoring CAN/V2X traffic' : 'DISABLED - vehicle unprotected'}`);
+      pushLog('info', `Mitigation simulation ${isIdsEnabled ? 'ON' : 'OFF'}. Backend detection remains active.`);
     }
     prevIds.current = isIdsEnabled;
   }, [isIdsEnabled, pushLog]);
@@ -67,14 +66,14 @@ export default function App() {
   const prevAttack = useRef(false);
   useEffect(() => {
     if (isAttack && !prevAttack.current && !isIdsEnabled) {
-      pushLog('warn', 'Anomalous speed spike on bus - IDS offline, no mitigation.');
+      pushLog('warn', 'Backend flagged an attack; mitigation simulation is OFF.');
     }
     prevAttack.current = isAttack;
   }, [isAttack, isIdsEnabled, pushLog]);
 
   const status = isAttack
     ? isIdsEnabled
-      ? { text: 'THREAT NEUTRALISED', cls: 'bg-emerald-500/15 text-emerald-300 border-emerald-500/40' }
+      ? { text: 'SIMULATED MITIGATION', cls: 'bg-emerald-500/15 text-emerald-300 border-emerald-500/40' }
       : { text: 'UNDER ATTACK', cls: 'bg-red-500/15 text-red-300 border-red-500/40' }
     : { text: 'NOMINAL', cls: 'bg-slate-700/40 text-slate-300 border-slate-600' };
 
@@ -83,7 +82,7 @@ export default function App() {
       <header className="flex flex-wrap items-center justify-between gap-4 border-b border-slate-800 px-6 py-4">
         <div>
           <h1 className="text-xl font-bold tracking-wide">Vehicle Cyber-Security Dashboard</h1>
-          <p className="text-xs text-slate-400">Live V2X telemetry - AI intrusion detection</p>
+          <p className="text-xs text-slate-400">Live backend AI detection and V2X telemetry</p>
         </div>
         <div className="flex flex-wrap items-center gap-4">
           <span className={`rounded-full border px-3 py-1 text-xs font-bold tracking-widest ${conn.cls}`}>

@@ -24,10 +24,10 @@ export default function IdsToggle({ isIdsEnabled, onChange }) {
       </span>
       <span className="text-left leading-tight">
         <span className="block text-sm font-bold uppercase tracking-wider text-slate-100">
-          AI Intrusion Detection System
+          Mitigation simulation
         </span>
         <span className={`block text-xs font-semibold ${isIdsEnabled ? 'text-emerald-300' : 'text-slate-400'}`}>
-          {isIdsEnabled ? 'ACTIVE - protecting vehicle' : 'OFFLINE - vehicle exposed'}
+          {isIdsEnabled ? 'ON - simulated response' : 'OFF - detection only'}
         </span>
       </span>
     </button>

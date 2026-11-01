@@ -1,6 +1,8 @@
 import { useEffect, useRef, useState } from 'react';
 
-const WS_URL = import.meta.env.VITE_WS_URL || 'ws://localhost:8000/ws/dashboard';
+const WS_PROTOCOL = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+const WS_URL = import.meta.env.VITE_WS_URL
+  || `${WS_PROTOCOL}//${window.location.hostname}:8001/ws/dashboard`;
 const MIN_BACKOFF_MS = 1000;
 const MAX_BACKOFF_MS = 10000;
 
